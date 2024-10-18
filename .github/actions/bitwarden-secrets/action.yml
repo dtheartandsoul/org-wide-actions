@@ -14,6 +14,9 @@ inputs:
   app_env:
     description: 'App deployment environment, e.g. uat or prod'
     required: true
+  bw_client_creds:
+    description: 'base64-encoded json of email/password for Bitwarden account'
+    required: true
 
 runs:
   using: "composite"
@@ -24,15 +27,20 @@ runs:
       curl -Lso bw.zip 'https://vault.bitwarden.com/download/?app=cli&platform=linux'
       unzip bw.zip -d /usr/local/bin
       bw --version
+      bw config server
 
   - name: Log in to Bitwarden, unlock it and get a session key
     shell: bash
     run: |
-      export BW_PW=`   echo '${{secrets.BITWARDEN_CLIENT_CREDS }}' | base64 -d | jq -r '.password' `
-      export BW_EMAIL=`echo '${{secrets.BITWARDEN_CLIENT_CREDS }}' | base64 -d | jq -r '.email' `
+      export BW_PW=`   echo '${{ inputs.bw_client_creds }}' | base64 -d | jq -r '.password' `
+      export BW_EMAIL=`echo '${{ inputs.bw_client_creds }}' | base64 -d | jq -r '.email' `
       # This approach both logs in and unlocks the vault in the same step.
-      echo BW_SESS=$(bw login --raw --passwordenv BW_PW "$BW_EMAIL") >> $GITHUB_ENV
-      echo "Logged in to Bitwarden."
+      bw login --check && true
+      # bw login is really glitchy; Running it in a subshell to capture its output directly
+      # into a variable produces sporadic "Account not found" errors.
+      bw login --raw --passwordenv BW_PW $BW_EMAIL > /tmp/BW_SESS && true
+      echo BW_SESS=`cat /tmp/BW_SESS` >> $GITHUB_ENV
+      bw login --check && true
 
   - name:  Get secrets from Bitwarden, based on APP_ENV
     shell: bash
