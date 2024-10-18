@@ -1,0 +1,48 @@
+# A Github "composite action", for setting secrets in GITHUB_ENV.
+# - Retrieves secrets defined in secret_key_list from Bitwarden folder specified by app_env.
+# - Also sets KUBECONFIG_CONTENTS, for later kubectl auth.
+# - Also sets BW_SESS variable via GITHUB_ENV for subsequent steps if needed.
+#
+# Needs Github Actions secret BITWARDEN_CLIENT_CREDS: json with Bitwarden account's email and password.
+#
+name: Retrieve Bitwarden Secrets
+
+inputs:
+  secret_key_list:
+    description: 'Secrets to retrieve from bitwarden'
+    required: true
+  app_env:
+    description: 'App deployment environment, e.g. uat or prod'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install Bitwarden CLI
+    run: |
+      curl -Lso bw.zip 'https://vault.bitwarden.com/download/?app=cli&platform=linux'
+      unzip bw.zip -d /usr/local/bin
+      bw --version
+
+  - name: Log in to Bitwarden, unlock it and get a session key
+    run: |
+      export BW_PW=`   echo '${{secrets.BITWARDEN_CLIENT_CREDS }}' | base64 -d | jq -r '.password' `
+      export BW_EMAIL=`echo '${{secrets.BITWARDEN_CLIENT_CREDS }}' | base64 -d | jq -r '.email' `
+      # This approach both logs in and unlocks the vault in the same step.
+      echo BW_SESS=$(bw login --raw --passwordenv BW_PW "$BW_EMAIL") >> $GITHUB_ENV
+      echo "Logged in to Bitwarden."
+
+  - name:  Get secrets from Bitwarden, based on APP_ENV
+    run: |-
+      FID=$(bw list folders --session '${{ env.BW_SESS }}' | jq -r '.[] | select(.name == "${{env.APP_ENV}}") | .id')
+      for key in ${{ inputs.secret_key_list }}
+      do
+        val=$(bw list items --folderid "$FID" --search $key --session '${{ env.BW_SESS }}' | jq -r '.[0].notes')
+        export $key="$val"
+        echo $key="$val" >> $GITHUB_ENV
+      done
+      echo Set multiline KUBECONFIG_CONTENTS env var from Bitwarden secret...
+      echo 'KUBECONFIG_CONTENTS<<EOF' >> $GITHUB_ENV
+      bw list items --folderid "$FID" --search KUBECONFIG_CONTENTS --session '${{ env.BW_SESS }}' | jq -r '.[0].notes' >> $GITHUB_ENV
+      echo EOF >> $GITHUB_ENV
+
