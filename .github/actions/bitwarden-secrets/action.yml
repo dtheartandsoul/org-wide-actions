@@ -19,12 +19,14 @@ runs:
   using: "composite"
   steps:
   - name: Install Bitwarden CLI
+    shell: bash
     run: |
       curl -Lso bw.zip 'https://vault.bitwarden.com/download/?app=cli&platform=linux'
       unzip bw.zip -d /usr/local/bin
       bw --version
 
   - name: Log in to Bitwarden, unlock it and get a session key
+    shell: bash
     run: |
       export BW_PW=`   echo '${{secrets.BITWARDEN_CLIENT_CREDS }}' | base64 -d | jq -r '.password' `
       export BW_EMAIL=`echo '${{secrets.BITWARDEN_CLIENT_CREDS }}' | base64 -d | jq -r '.email' `
@@ -33,6 +35,7 @@ runs:
       echo "Logged in to Bitwarden."
 
   - name:  Get secrets from Bitwarden, based on APP_ENV
+    shell: bash
     run: |-
       FID=$(bw list folders --session '${{ env.BW_SESS }}' | jq -r '.[] | select(.name == "${{env.APP_ENV}}") | .id')
       for key in ${{ inputs.secret_key_list }}
