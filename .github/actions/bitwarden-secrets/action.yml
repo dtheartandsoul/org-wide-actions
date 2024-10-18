@@ -5,7 +5,7 @@
 #
 # Needs Github Actions secret BITWARDEN_CLIENT_CREDS: json with Bitwarden account's email and password.
 #
-name: Retrieve Bitwarden Secrets
+name: Retrieve Secrets from Bitwarden, including KUBECONFIG_CONTENTS
 
 inputs:
   secret_key_list:

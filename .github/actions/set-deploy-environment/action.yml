@@ -1,0 +1,26 @@
+# A Github "composite action", for setting deployment-specific parameters,
+#   based on the branch that was pushed (usually 'development' or 'main'),
+#   especially APP_ENV (usually to 'uat' or 'prod'
+#   and K8S_NAMESPACE (usally 'dths-uat-ns' or dths-prod-ns').
+# The params are passed to subsequent steps via GITHUB_ENV.
+#
+name: 'Set deployment-specific (uat or prod) params, such as APP_ENV and K8S_NAMESPACE, based on branch'
+
+inputs:
+  branch:
+    description: 'The branch that was pushed'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Set APP_ENV and K8S_NAMESPACE
+    shell: bash
+    run: |
+      if [[ "${{ inputs.branch }}" == "refs/heads/main" ]]; then
+        APP_ENV=prod # Prod: The dths firestore project.
+      elif [[ "${{ inputs.branch }}" == "refs/heads/development" ]]; then
+        APP_ENV=uat  # UAT: The dths-test firestore project.
+      fi
+      echo "APP_ENV=${APP_ENV}" >> $GITHUB_ENV
+      echo "K8S_NAMESPACE=dths-${APP_ENV}-ns" >> $GITHUB_ENV
