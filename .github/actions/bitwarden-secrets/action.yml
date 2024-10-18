@@ -38,8 +38,17 @@ runs:
       bw login --check && true
       sleep 1
       bw login --raw --passwordenv BW_PW $BW_EMAIL > /tmp/BW_SESS && true
-      echo BW_SESS=`cat /tmp/BW_SESS` >> $GITHUB_ENV
+      sleep 1
       bw login --check && true
+      if [ $? -ne 0 ]; then
+        # Try it again
+        sleep 1
+        bw login --raw --passwordenv BW_PW $BW_EMAIL > /tmp/BW_SESS && true
+      fi
+      sleep 1
+      bw login --check && true
+      sleep 1
+      echo BW_SESS=`cat /tmp/BW_SESS` >> $GITHUB_ENV
 
   - name:  Get secrets from Bitwarden, based on APP_ENV
     shell: bash
