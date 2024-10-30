@@ -1,0 +1,30 @@
+# A Github "composite action" for creating an image pull secret
+# (referenced by imagePullSecret in a pod spec).
+#
+# Needs Github Actions secret BITWARDEN_CLIENT_CREDS: json with Bitwarden account's email and password.
+#
+name: Retrieve Secrets from Bitwarden, including KUBECONFIG_CONTENTS
+
+inputs:
+  svc_acct_key:
+    description: 'the service account key from which to create the secret'
+    required: true
+  k8s_namespace:
+    description: 'Kubernetes namespace where the secret belongs'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Create k8s secret for k8s to auth to artifact registry for pulling images
+    shell: bash
+    run: |-
+      kubectl get secret artifact-registry --namespace ${{ inputs.k8s_namespace }} > /dev/null 2>&1 && true
+      if [ $? -ne 0 ]; then   # Make the docker-registry secret named 'container-registry'
+        kubectl --namespace=${{ inputs.k8s_namespace }} \
+          create secret docker-registry artifact-registry \
+          --docker-server us-central1-docker.pkg.dev \
+          --docker-username _json_key \
+          --docker-email norepy@dtheartandsoul.net \
+          --docker-password="$(echo ${{ inputs.svc_acct_key }} | base64 -d)"
+      fi
