@@ -20,7 +20,7 @@ runs:
     shell: bash
     run: |-
       kubectl get secret artifact-registry --namespace ${{ inputs.k8s_namespace }} > /dev/null 2>&1 && true
-      if [ $? -ne 0 ]; then   # Make the docker-registry secret named 'container-registry'
+      if [ $? -ne 0 ]; then   # Make the docker-registry secret named 'artifact-registry'
         kubectl --namespace=${{ inputs.k8s_namespace }} \
           create secret docker-registry artifact-registry \
           --docker-server us-central1-docker.pkg.dev \
