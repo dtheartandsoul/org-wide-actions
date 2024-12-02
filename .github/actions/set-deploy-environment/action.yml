@@ -19,8 +19,12 @@ runs:
     run: |
       if [[ "${{ inputs.branch }}" == "refs/heads/main" ]]; then
         APP_ENV=prod # Prod: The dths firestore project.
-      elif [[ "${{ inputs.branch }}" == "refs/heads/development" ]]; then
+      elif [[ "${{ inputs.branch }}" == "refs/heads/uat" ]]; then
         APP_ENV=uat  # UAT: The dths-test firestore project.
+      elif [[ "${{ inputs.branch }}" == "refs/heads/development" ]]; then
+        APP_ENV=development  # UAT: The dths-test firestore project.
+      else
+        APP_ENV=AppEnvNotSet  # UAT: The dths-test firestore project.
       fi
       echo "APP_ENV=${APP_ENV}" >> $GITHUB_ENV
       echo "K8S_NAMESPACE=dths-${APP_ENV}-ns" >> $GITHUB_ENV
