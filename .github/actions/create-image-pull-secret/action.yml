@@ -25,6 +25,6 @@ runs:
           create secret docker-registry artifact-registry \
           --docker-server us-central1-docker.pkg.dev \
           --docker-username _json_key \
-          --docker-email norepy@dtheartandsoul.com \
+          --docker-email noreply@dtheartandsoul.com \
           --docker-password="$(echo ${{ inputs.svc_acct_key }} | base64 -d)"
       fi
