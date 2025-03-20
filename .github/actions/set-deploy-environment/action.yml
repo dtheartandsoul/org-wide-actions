@@ -21,8 +21,8 @@ runs:
         APP_ENV=prod # Prod: The dths firestore project.
       elif [[ "${{ inputs.branch }}" == "refs/heads/uat" ]]; then
         APP_ENV=uat  # UAT: The dths-test firestore project.
-      elif [[ "${{ inputs.branch }}" == "refs/heads/development" ]]; then
-        APP_ENV=development  # UAT: The dths-test firestore project.
+      elif [[ "${{ inputs.branch }}" == "refs/heads/dev" ]]; then
+        APP_ENV=dev  # UAT: The dths-test firestore project.
       else
         APP_ENV=AppEnvNotSet  # UAT: The dths-test firestore project.
       fi
