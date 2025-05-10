@@ -4,7 +4,7 @@
 #   and K8S_NAMESPACE (usally 'dths-uat-ns' or dths-prod-ns').
 # The params are passed to subsequent steps via GITHUB_ENV.
 #
-name: 'Set deployment-specific (uat or prod) params, such as APP_ENV and K8S_NAMESPACE, based on branch'
+name: 'Set deployment-specific (prod, uat, or dev) params, such as APP_ENV and K8S_NAMESPACE, based on branch'
 
 inputs:
   branch:
@@ -23,6 +23,7 @@ runs:
         APP_ENV=uat  # UAT: The dths-test firestore project.
       elif [[ "${{ inputs.branch }}" == "refs/heads/dev" ]]; then
         APP_ENV=dev  # UAT: The dths-test firestore project.
+        DEBUG=true
       else
         APP_ENV=AppEnvNotSet  # UAT: The dths-test firestore project.
       fi
