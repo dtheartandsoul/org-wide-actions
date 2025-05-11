@@ -29,3 +29,4 @@ runs:
       fi
       echo "APP_ENV=${APP_ENV}" >> $GITHUB_ENV
       echo "K8S_NAMESPACE=dths-${APP_ENV}-ns" >> $GITHUB_ENV
+      echo "DEBUG=${DEBUG}" >> $GITHUB_ENV
