@@ -21,10 +21,18 @@ runs:
     run: |-
       kubectl get secret artifact-registry --namespace ${{ inputs.k8s_namespace }} > /dev/null 2>&1 && true
       if [ $? -ne 0 ]; then   # Make the docker-registry secret named 'artifact-registry'
+        # Decode the service account key to a temp file
+        echo "${{ inputs.svc_acct_key }}" | base64 -d > /tmp/svc_key.json
+
+        # Read the decoded key for the kubectl command
         kubectl --namespace=${{ inputs.k8s_namespace }} \
           create secret docker-registry artifact-registry \
           --docker-server us-central1-docker.pkg.dev \
           --docker-username _json_key \
           --docker-email noreply@dtheartandsoul.com \
-          --docker-password="$(echo ${{ inputs.svc_acct_key }} | base64 -d)"
+          --docker-password="$(cat /tmp/svc_key.json)" \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+        # Clean up
+        rm /tmp/svc_key.json
       fi
